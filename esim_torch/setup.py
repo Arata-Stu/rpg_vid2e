@@ -1,5 +1,7 @@
 from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+import torch.utils.cpp_extension
+torch.utils.cpp_extension.CUDA_HOME = "/usr/local/cuda"
 
 setup(
     name='esim_torch',
