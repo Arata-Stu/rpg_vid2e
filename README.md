@@ -39,40 +39,55 @@ Clone the repo *recursively with submodules*
 
 ```bash
 git clone git@github.com:uzh-rpg/rpg_vid2e.git --recursive
+cd rpg_vid2e
 ```
 
-## Installation
-First download the [FILM](https://github.com/google-research/frame-interpolation) checkpoint, and move it to the current root
-```bash
-    wget https://rpg.ifi.uzh.ch/data/VID2E/pretrained_models.zip -O /tmp/temp.zip
-    unzip /tmp/temp.zip -d rpg_vid2e/
-    rm -rf /tmp/temp.zip
-```
+### Recommended environment (modern GPU)
 
-make sure to install the following
-    * [Anaconda Python 3.9](https://www.anaconda.com/products/individual)
-    * [CUDA Toolkit 11.2.1](https://developer.nvidia.com/cuda-11.2.1-download-archive)
-    * [cuDNN 8.1.0](https://developer.nvidia.com/rdp/cudnn-download)
+Create an environment with Python 3.10+ and install the base dependencies:
 
 ```bash
-conda create --name vid2e python=3.9
-conda activate vid2e
-pip install -r rpg_vid2e/requirements.txt
-conda install -y -c conda-forge pybind11 matplotlib
-conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip setuptools wheel
+pip install -r requirements.txt
 ```
 
-Build the python bindings for ESIM
+Install a CUDA-enabled PyTorch build that matches your local driver/runtime (see [PyTorch install selector](https://pytorch.org/get-started/locally/)).
 
 ```bash
-pip install rpg_vid2e/esim_py/
+pip install torch torchvision torchaudio
 ```
 
-Build the python bindings with GPU support with 
+Build/install the GPU bindings:
 
 ```bash
-pip install rpg_vid2e/esim_torch/
+pip install -e ./esim_torch --no-build-isolation
 ```
+
+Optionally build/install the CPU pybind bindings:
+
+```bash
+pip install -e ./esim_py --no-build-isolation
+```
+
+### Optional: FILM upsampling dependencies
+
+Download the [FILM](https://github.com/google-research/frame-interpolation) checkpoint and place it at `pretrained_models/film_net/Style/saved_model`:
+
+```bash
+wget https://rpg.ifi.uzh.ch/data/VID2E/pretrained_models.zip -O /tmp/temp.zip
+unzip /tmp/temp.zip -d .
+rm -rf /tmp/temp.zip
+```
+
+Install optional upsampling dependencies:
+
+```bash
+pip install -r requirements-upsampling.txt
+```
+
+For historical reproducibility with the original pinned dependency set, use `requirements-legacy.txt`.
 
 ## Adaptive Upsampling
 *This package provides code for adaptive upsampling with frame interpolation based on [Super-SloMo](https://people.cs.umass.edu/~hzjiang/projects/superslomo/)*
@@ -93,19 +108,19 @@ For detailed instructions and example consult the [README](esim_torch/README.md)
 To run an example, first upsample the example videos 
 
 ```bash
-device=cpu
-# device=cuda:0
-python upsampling/upsample.py --input_dir=example/original --output_dir=example/upsampled --device=$device
+device=auto
+# device=cpu
+# device=0
+python3 upsampling/upsample.py --input_dir=example/original --output_dir=example/upsampled --device=$device
 
 ```
-This will generate upsampling/upsampled with in the `example/upsampled` folder. To generate events, use
+This will generate upsampled frames in the `example/upsampled` folder. To generate events, use
 ```bash
-python esim_torch/generate_events.py --input_dir=example/upsampled \
-                                     --output_dir=example/events \
-                                     --contrast_threshold_neg=0.2 \
-                                     --contrast_threshold_pos=0.2 \
-                                     --refractory_period_ns=0
+python3 esim_torch/scripts/generate_events.py --input_dir=example/upsampled \
+                                             --output_dir=example/events \
+                                             --contrast_threshold_neg=0.2 \
+                                             --contrast_threshold_pos=0.2 \
+                                             --refractory_period_ns=0 \
+                                             --device=cuda
 ```
-
-
 

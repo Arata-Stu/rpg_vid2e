@@ -4,6 +4,7 @@ import esim_cuda
 
 class EventSimulator_torch(torch.nn.Module):
     def __init__(self, contrast_threshold_neg=0.2, contrast_threshold_pos=0.2, refractory_period_ns=0):
+        super().__init__()
         self.contrast_threshold_neg = contrast_threshold_neg
         self.contrast_threshold_pos = contrast_threshold_pos
         self.refractory_period_ns = int(refractory_period_ns)
@@ -16,6 +17,9 @@ class EventSimulator_torch(torch.nn.Module):
     def _check_inputs(self, images, timestamps):
         assert timestamps.dtype == torch.int64, timestamps.dtype
         assert images.dtype == torch.float32, images.dtype
+        assert images.is_cuda, "images must be on CUDA"
+        assert timestamps.is_cuda, "timestamps must be on CUDA"
+        assert images.device == timestamps.device, "images and timestamps must be on the same CUDA device"
 
     def reset(self):
         self.initial_reference_values = None
@@ -54,6 +58,8 @@ class EventSimulator_torch(torch.nn.Module):
         return events
 
     def initialized_forward(self, images, timestamps):
+        images = images.contiguous()
+        timestamps = timestamps.contiguous()
 
         T, H, W = images.shape
         reference_values_over_time = torch.zeros((T-1, H, W),

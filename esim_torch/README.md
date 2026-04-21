@@ -1,14 +1,26 @@
 # esim\_torch
 
-This package exposes python bindings for ESIM with GPU support. 
-Test your installation with 
+This package exposes python bindings for ESIM with GPU support.
+
+## Build / Install
+
+Install a CUDA-enabled PyTorch build first (matching your local driver/CUDA runtime), then build this extension:
 
 ```bash
-cd esim_torch/
-python test.py
+pip install -e ./esim_torch --no-build-isolation
 ```
 
-which should create a plot. 
+`--no-build-isolation` is recommended so the build uses the same PyTorch install as your environment.
+
+## Quick test
+
+Test your installation with
+
+```bash
+python3 esim_torch/test/test.py
+```
+
+which should create a plot.
 
 The currently supported functions are listed in the example below:
 ```python
@@ -28,7 +40,7 @@ events = esim.forward(
 )
 
 # Reset the internal state of the simulator
-events.reset()
+esim.reset()
 
 # events can also be generated in a for loop 
 # to keep memory requirements low

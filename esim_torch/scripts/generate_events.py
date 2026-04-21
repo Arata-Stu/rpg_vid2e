@@ -1,5 +1,4 @@
 import argparse
-from operator import sub
 import os
 import esim_torch
 import numpy as np
@@ -16,6 +15,7 @@ def is_valid_dir(subdirs, files):
 def process_dir(outdir, indir, args):
     print(f"Processing folder {indir}... Generating events in {outdir}")
     os.makedirs(outdir, exist_ok=True)
+    device = torch.device(args.device)
 
     # constructor
     esim = esim_torch.ESIM(args.contrast_threshold_negative,
@@ -24,7 +24,7 @@ def process_dir(outdir, indir, args):
 
     timestamps = np.genfromtxt(os.path.join(indir, "timestamps.txt"), dtype="float64")
     timestamps_ns = (timestamps * 1e9).astype("int64")
-    timestamps_ns = torch.from_numpy(timestamps_ns).cuda()
+    timestamps_ns = torch.from_numpy(timestamps_ns).to(device)
 
     image_files = sorted(glob.glob(os.path.join(indir, "imgs", "*.png")))
     
@@ -35,7 +35,7 @@ def process_dir(outdir, indir, args):
     for image_file, timestamp_ns in zip(image_files, timestamps_ns):
         image = cv2.imread(image_file, cv2.IMREAD_GRAYSCALE)
         log_image = np.log(image.astype("float32") / 255 + 1e-5)
-        log_image = torch.from_numpy(log_image).cuda()
+        log_image = torch.from_numpy(log_image).to(device)
 
         sub_events = esim.forward(log_image, timestamp_ns)
 
@@ -60,8 +60,14 @@ if __name__ == "__main__":
     parser.add_argument("--refractory_period_ns", "-rp", type=int, default=0)
     parser.add_argument("--input_dir", "-i", default="", required=True)
     parser.add_argument("--output_dir", "-o", default="", required=True)
+    parser.add_argument("--device", default="cuda", help="CUDA device, e.g. cuda or cuda:0")
     args = parser.parse_args()
 
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is required for esim_torch but no CUDA device is available.")
+
+    if not args.device.startswith("cuda"):
+        raise ValueError(f"esim_torch requires a CUDA device, got --device={args.device}")
 
     print(f"Generating events with cn={args.contrast_threshold_negative}, cp={args.contrast_threshold_positive} and rp={args.refractory_period_ns}")
 

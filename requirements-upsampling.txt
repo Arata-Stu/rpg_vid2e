@@ -1,0 +1,8 @@
+-r requirements.txt
+
+# Optional dependencies for FILM-based adaptive upsampling.
+# TensorFlow 2.13+ is recommended for modern CUDA stacks.
+tensorflow>=2.13,<2.18
+mediapy>=1.2
+gin-config>=0.5
+absl-py>=1.4

@@ -1,6 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 import esim_torch
 
@@ -9,21 +10,27 @@ def increasing_sin_wave(t):
     return (400 * np.sin((t-t[0])*20*np.pi)*(t-t[0])+150).astype("uint8").reshape((-1,1,1))
 
 if __name__ == "__main__":
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is required to run this test.")
+
     c = 0.2
     refractory_period_ns = 5e6
     esim = esim_torch.ESIM(contrast_threshold_neg=c,
                            contrast_threshold_pos=c,
                            refractory_period_ns=refractory_period_ns)
 
+    root_dir = Path(__file__).resolve().parents[2]
+    images_dir = root_dir / "esim_py" / "tests" / "data" / "images"
+
     print("Loading images")
-    timestamps_s = np.genfromtxt("../esim_py/tests/data/images/timestamps.txt")
+    timestamps_s = np.genfromtxt(str(images_dir / "timestamps.txt"))
     images = increasing_sin_wave(timestamps_s)
     timestamps_ns = (timestamps_s * 1e9).astype("int64")
     log_images = np.log(images.astype("float32") / 255 + 1e-4)
 
     # generate torch tensors
     print("Loading data to GPU")
-    device = "cuda:0"
+    device = "cuda"
     log_images = torch.from_numpy(log_images).to(device)
     timestamps_ns = torch.from_numpy(timestamps_ns).to(device)
 
@@ -64,4 +71,3 @@ if __name__ == "__main__":
     ax[1].plot([0,3e8], [refractory_period_ns, refractory_period_ns])
 
     plt.show()
-

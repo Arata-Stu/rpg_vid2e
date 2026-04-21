@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Optional dependencies for the Streamlit web app.
+streamlit>=1.30
+stqdm>=0.0.5
+numba>=0.59

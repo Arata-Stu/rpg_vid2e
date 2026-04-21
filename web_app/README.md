@@ -122,32 +122,32 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 Follow these steps in order to make this app run in your local system.
 
-_This code base assumes you have access to a NVIDIA GPU in your system with proper drivers installed along with the `cuda-toolkit` version `10.1`._
+_This code base assumes you have access to an NVIDIA GPU with recent drivers and a CUDA-compatible PyTorch build._
 
 ### Prerequisites & Installation
 
-Make sure that you have followed the [Instalation with Anaconda Instruction](https://github.com/uzh-rpg/rpg_vid2e) and have created the `vid2e` Conda environment with the `esim_torch` package installed in this environment.
-1. Activate the Conda environment
-  ```sh
-  conda activate vid2e
-  conda list | grep 'esim'
-  ```
-
-  The above command should output the following
-  ```sh
-  esim-cuda                 0.0.0                    pypi_0    pypi
-  esim-py                   0.0.1                    pypi_0    pypi
-  ```
-
-2. Install the `streamlit` package in this Conda environment, along with a couple of additional packages.
+Use a Python virtual environment (`venv`) in the repository root:
 ```sh
-pip install streamlit stqdm numba h5py
+cd rpg_vid2e
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip setuptools wheel
+pip install -r requirements.txt
+pip install -r requirements-webapp.txt
+pip install -e ./esim_torch --no-build-isolation
+```
+
+Quick verification:
+```sh
+python3 -c "import torch, esim_torch; print('torch:', torch.__version__, 'cuda:', torch.cuda.is_available())"
 ```
 ### Running the Web App Locally
 
 If you want to run this app locally on your system then follow these steps.
 1. Run the App
 ```sh
+source .venv/bin/activate
+cd web_app
 streamlit run web_app.py
 ```
 2. Then you can access the app in Local URL: http://localhost:8501
@@ -169,22 +169,18 @@ _Make sure you select the `Run time type` as `GPU` in `Google Colab`_
   ! chmod +x ./auto-install.sh
   ! sudo ./auto-install.sh
   ```
-3. Install Miniconda in your Google Colab Instance
+3. Clone the repository
   ```sh
-  ! wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh
-  ! chmod +x Miniconda3-py37_4.8.2-Linux-x86_64.sh
-  ! bash ./Miniconda3-py37_4.8.2-Linux-x86_64.sh -b -f -p /usr/local
+  !git clone https://github.com/uzh-rpg/rpg_vid2e.git
+  %cd rpg_vid2e
   ```
-4. Update Python Path
+4. Install dependencies with pip
   ```sh
-  import sys
-  sys.path.insert(0,'/usr/local/lib/python3.7/site-packages/')
+  !pip install -U pip setuptools wheel
+  !pip install -r requirements.txt -r requirements-webapp.txt
+  !pip install -e ./esim_torch --no-build-isolation
   ```
-5. Install Streamlit package
-  ```sh
-  !pip install streamlit
-  ```
-6. Run the remote.it service
+5. Run the remote.it service
   ```sh
   !sudo connectd_installer
   ```
@@ -195,23 +191,14 @@ _Make sure you select the `Run time type` as `GPU` in `Google Colab`_
   - Protocol Selection Menu, Choose `2`, `Web (HTTP) on port 80`
   - Enter a name for this remote.it service, `esim`
   - Main menu, choose, `5` `Exit`
-7. Mount your Google Drive to this Google Colab Instance
-8. Change directory to where to want this project to reside.
-9. Clone the repo
+6. Check if the `esim_torch` package is installed
    ```sh
-   git clone https://github.com/uzh-rpg/rpg_vid2e.git
-   ```
-10. Check if the `esim_torch` package is installed
-   ```sh
-   import esim
+   import esim_torch
    print(esim_torch.__path__)
    ```
-11. Built the `esim_torch` package with `pybind11`
+7. Change directory inside `web_app` and run the app on port number `80` as a webservice which can then be accessed for the remote.it service.
    ```sh
-   pip install esim_torch/
-   ```
-12. Change directory inside `web_app` and run the app on port number `80` as a webservice which can then be accessed for the remote.it service.
-   ```sh
+   %cd web_app
    !streamlit run --server.port 80 web_app.py&>/dev/null&
    ```
 

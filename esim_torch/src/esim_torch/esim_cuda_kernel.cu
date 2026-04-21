@@ -3,13 +3,18 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include <cmath>
 #include <vector>
 
 
-#define CHECK_CUDA(x) AT_ASSERTM(x.type().is_cuda(), #x " must be a CUDA tensor")
-#define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x " must be contiguous")
-#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
-#define CHECK_DEVICE(x, y) AT_ASSERTM(x.device().index() == y.device().index(), #x " and " #y " must be in same CUDA device")
+#define CHECK_CUDA(x) TORCH_CHECK((x).is_cuda(), #x " must be a CUDA tensor")
+#define CHECK_CONTIGUOUS(x) TORCH_CHECK((x).is_contiguous(), #x " must be contiguous")
+#define CHECK_INPUT(x) \
+  CHECK_CUDA(x);       \
+  CHECK_CONTIGUOUS(x)
+#define CHECK_DEVICE(x, y) TORCH_CHECK((x).device() == (y).device(), #x " and " #y " must be in same CUDA device")
+#define CHECK_FLOAT32(x) TORCH_CHECK((x).scalar_type() == torch::kFloat32, #x " must be float32")
+#define CHECK_INT64(x) TORCH_CHECK((x).scalar_type() == torch::kInt64, #x " must be int64")
 
 /*
 Precompute the reference values and number of events between the reference values to read out easily after
@@ -44,7 +49,7 @@ __global__ void count_events_cuda_forward_kernel(
     // process events leading up to i1. 
     polarity = (i1 >= ref) ? 1 : -1;
     float ct = (i1 >= ref) ? ct_pos : ct_neg;
-    num_events = std::abs(i1 - ref) / ct;
+    num_events = fabsf(i1 - ref) / ct;
     tot_num_events += num_events;
     ref += polarity * ct * num_events;
 
@@ -98,7 +103,7 @@ __global__ void esim_cuda_forward_kernel(
 
     int polarity = (i1 >= ref0) ? 1 : -1;
     float ct = (i1 >= ref0) ? ct_pos : ct_neg;
-    int64_t num_events = std::abs(i1 - ref0) / ct;
+    int64_t num_events = fabsf(i1 - ref0) / ct;
 
     int64_t t_prev = t_last_ev[linIdx];
     for (int evIdx=0; evIdx<num_events; evIdx++) 
@@ -134,9 +139,18 @@ std::vector<torch::Tensor> esim_forward_count_events(
   CHECK_INPUT(count_ev);
   CHECK_INPUT(init_refs);
   CHECK_INPUT(refs_over_time);
+  CHECK_FLOAT32(imgs);
+  CHECK_FLOAT32(init_refs);
+  CHECK_FLOAT32(refs_over_time);
+  CHECK_INT64(count_ev);
   CHECK_DEVICE(imgs, count_ev);
   CHECK_DEVICE(imgs, init_refs);
   CHECK_DEVICE(imgs, refs_over_time);
+
+  TORCH_CHECK(imgs.dim() == 3, "imgs must have shape [T, H, W]");
+  TORCH_CHECK(init_refs.dim() == 2, "init_refs must have shape [H, W]");
+  TORCH_CHECK(refs_over_time.dim() == 3, "refs_over_time must have shape [T-1, H, W]");
+  TORCH_CHECK(count_ev.dim() == 2, "count_ev must have shape [H, W]");
 
   //cudaSetDevice(imgs.device().index());
   
@@ -150,10 +164,10 @@ std::vector<torch::Tensor> esim_forward_count_events(
   dim3 blocks((H * W + threads - 1) / threads, 1);
 
   count_events_cuda_forward_kernel<float><<<blocks, threads>>>(
-      imgs.data<float>(), 
-      init_refs.data<float>(),
-      refs_over_time.data<float>(),
-      count_ev.data<int64_t>(),
+      imgs.data_ptr<float>(), 
+      init_refs.data_ptr<float>(),
+      refs_over_time.data_ptr<float>(),
+      count_ev.data_ptr<int64_t>(),
       T, H, W, ct_neg, ct_pos
     );
 
@@ -179,6 +193,14 @@ torch::Tensor esim_forward(
   CHECK_INPUT(offsets);
   CHECK_INPUT(refs_over_time);
   CHECK_INPUT(init_refs);
+  CHECK_INPUT(t_last_ev);
+  CHECK_FLOAT32(imgs);
+  CHECK_FLOAT32(init_refs);
+  CHECK_FLOAT32(refs_over_time);
+  CHECK_INT64(ts);
+  CHECK_INT64(offsets);
+  CHECK_INT64(ev);
+  CHECK_INT64(t_last_ev);
   
   CHECK_DEVICE(imgs, ts);
   CHECK_DEVICE(imgs, ev);
@@ -186,6 +208,14 @@ torch::Tensor esim_forward(
   CHECK_DEVICE(imgs, init_refs);
   CHECK_DEVICE(imgs, refs_over_time);
   CHECK_DEVICE(imgs, t_last_ev);
+
+  TORCH_CHECK(imgs.dim() == 3, "imgs must have shape [T, H, W]");
+  TORCH_CHECK(ts.dim() == 1, "ts must have shape [T]");
+  TORCH_CHECK(init_refs.dim() == 2, "init_refs must have shape [H, W]");
+  TORCH_CHECK(refs_over_time.dim() == 3, "refs_over_time must have shape [T-1, H, W]");
+  TORCH_CHECK(offsets.dim() == 2, "offsets must have shape [H, W]");
+  TORCH_CHECK(ev.dim() == 2 && ev.size(1) == 4, "ev must have shape [N, 4]");
+  TORCH_CHECK(t_last_ev.dim() == 2, "t_last_ev must have shape [H, W]");
 
   //cudaSetDevice(imgs.device().index());
 
@@ -197,13 +227,13 @@ torch::Tensor esim_forward(
   dim3 blocks((H * W + threads - 1) / threads, 1);
 
   esim_cuda_forward_kernel<float><<<blocks, threads>>>(
-      imgs.data<float>(),
-      ts.data<int64_t>(), 
-      init_refs.data<float>(),
-      refs_over_time.data<float>(),
-      offsets.data<int64_t>(),
-      ev.data<int64_t>(),
-      t_last_ev.data<int64_t>(),
+      imgs.data_ptr<float>(),
+      ts.data_ptr<int64_t>(), 
+      init_refs.data_ptr<float>(),
+      refs_over_time.data_ptr<float>(),
+      offsets.data_ptr<int64_t>(),
+      ev.data_ptr<int64_t>(),
+      t_last_ev.data_ptr<int64_t>(),
       T, H, W, ct_neg, ct_pos, dt_ref
     );
   

@@ -3,9 +3,9 @@
 ## Generate Upsampled Video or Image Sequences
 You can use our example directory to experiment
 ```bash
-device=cpu
-# device=0
-CUDA_VISIBLE_DEVICES=$device python upsample.py --input_dir=../example/original --output_dir=../example/upsampled
+# device can be: auto, cpu, 0, 1, ...
+device=auto
+python3 upsample.py --input_dir=../example/original --output_dir=../example/upsampled --device=$device
 
 ```
 The **expected input structure** is as follows:
@@ -71,7 +71,7 @@ The resulting image directories can later be used to generate events. The `times
 - Be aware that upsampling videos might fail due to a [bug in scikit-video](https://github.com/scikit-video/scikit-video/issues/60)
 
 ### Generating Video Files from Images
-If you want to convert an ordered sequence of images (here png files) into video format you can use the following command (you may have to deactivate the current conda environment):
+If you want to convert an ordered sequence of images (here png files) into video format you can use the following command (you may have to deactivate the current virtual environment):
 ```bash
 frame_rate=25
 img_dirpath="example/original/seq0/imgs"

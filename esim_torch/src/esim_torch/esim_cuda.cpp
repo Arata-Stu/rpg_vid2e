@@ -20,7 +20,7 @@ std::vector<torch::Tensor> esim_forward_count_events(
     const torch::Tensor& images,
     const torch::Tensor& timestamps,
     const torch::Tensor& init_reference_values,
-    torch::Tensor& reference_values_over_time
+    torch::Tensor& reference_values_over_time,
     torch::Tensor& event_counts,
     torch::Tensor& timestamps_last_event,
     float contrast_threshold_negative,
