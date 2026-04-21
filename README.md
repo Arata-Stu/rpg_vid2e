@@ -135,7 +135,7 @@ To run an example, first upsample the example videos
 device=auto
 # device=cpu
 # device=0
-python3 upsampling/upsample.py --input_dir=example/original --output_dir=example/upsampled --device=$device
+python3 upsampling/upsample.py --input_dir=example/original --output_dir=example/upsampled --device=$device --tf_log_level=2
 
 ```
 This will generate upsampled frames in the `example/upsampled` folder. To generate events, use

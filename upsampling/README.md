@@ -5,9 +5,11 @@ You can use our example directory to experiment
 ```bash
 # device can be: auto, cpu, 0, 1, ...
 device=auto
-python3 upsample.py --input_dir=../example/original --output_dir=../example/upsampled --device=$device
+python3 upsample.py --input_dir=../example/original --output_dir=../example/upsampled --device=$device --tf_log_level=2
 
 ```
+
+If TensorFlow startup logs are too noisy, use `--tf_log_level=3` and `--quiet`.
 The **expected input structure** is as follows:
 ```
 input_dir

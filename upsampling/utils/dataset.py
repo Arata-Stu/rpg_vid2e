@@ -17,7 +17,7 @@ _NUMPY_ALIAS_COMPAT = {
     "str": str,
 }
 for _alias, _type in _NUMPY_ALIAS_COMPAT.items():
-    if not hasattr(np, _alias):
+    if _alias not in np.__dict__:
         setattr(np, _alias, _type)  # type: ignore[attr-defined]
 
 import skvideo.io
