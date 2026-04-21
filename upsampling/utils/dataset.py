@@ -7,9 +7,18 @@ from PIL import Image
 import numpy as np
 
 # skvideo (used for ffprobe/vreader) still references deprecated numpy aliases
-# on some releases. Restore the alias for numpy>=1.24 compatibility.
-if not hasattr(np, "float"):
-    np.float = float  # type: ignore[attr-defined]
+# on some releases. Restore aliases for numpy>=1.24 compatibility.
+_NUMPY_ALIAS_COMPAT = {
+    "float": float,
+    "int": int,
+    "bool": bool,
+    "complex": complex,
+    "object": object,
+    "str": str,
+}
+for _alias, _type in _NUMPY_ALIAS_COMPAT.items():
+    if not hasattr(np, _alias):
+        setattr(np, _alias, _type)  # type: ignore[attr-defined]
 
 import skvideo.io
 
