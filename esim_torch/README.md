@@ -12,6 +12,32 @@ pip install -e ./esim_torch --no-build-isolation
 
 `--no-build-isolation` is recommended so the build uses the same PyTorch install as your environment.
 
+## CUDA mismatch troubleshooting
+
+If build fails with a CUDA mismatch error, check your runtime/toolkit alignment:
+
+```bash
+echo "CUDA_HOME=$CUDA_HOME"
+which nvcc
+python3 - <<'PY'
+import torch
+from torch.utils.cpp_extension import CUDA_HOME
+print("torch:", torch.__version__)
+print("torch.version.cuda:", torch.version.cuda)
+print("cpp_extension.CUDA_HOME:", CUDA_HOME)
+PY
+nvcc -V
+```
+
+If versions do not match, reinstall a matching PyTorch wheel and rebuild. Example for CUDA 12.6:
+
+```bash
+pip uninstall -y torch torchvision torchaudio
+pip install --index-url https://download.pytorch.org/whl/cu126 torch torchvision torchaudio
+pip install ninja
+pip install -e ./esim_torch --no-build-isolation
+```
+
 ## Quick test
 
 Test your installation with

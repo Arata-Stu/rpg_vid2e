@@ -4,8 +4,14 @@ from typing import Union
 
 from fractions import Fraction
 from PIL import Image
-import skvideo.io
 import numpy as np
+
+# skvideo (used for ffprobe/vreader) still references deprecated numpy aliases
+# on some releases. Restore the alias for numpy>=1.24 compatibility.
+if not hasattr(np, "float"):
+    np.float = float  # type: ignore[attr-defined]
+
+import skvideo.io
 
 from .const import mean, std, img_formats
 

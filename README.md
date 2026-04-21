@@ -59,6 +59,30 @@ Install a CUDA-enabled PyTorch build that matches your local driver/runtime (see
 pip install torch torchvision torchaudio
 ```
 
+Before building `esim_torch`, verify that PyTorch CUDA and your local CUDA toolkit are aligned:
+
+```bash
+echo "CUDA_HOME=$CUDA_HOME"
+which nvcc
+python3 - <<'PY'
+import torch
+from torch.utils.cpp_extension import CUDA_HOME
+print("torch:", torch.__version__)
+print("torch.version.cuda:", torch.version.cuda)
+print("cpp_extension.CUDA_HOME:", CUDA_HOME)
+PY
+nvcc -V
+```
+
+If you hit `RuntimeError: The detected CUDA version mismatches the version that was used to compile PyTorch`, reinstall a matching PyTorch wheel and retry. Example for CUDA 12.6:
+
+```bash
+pip uninstall -y torch torchvision torchaudio
+pip install --index-url https://download.pytorch.org/whl/cu126 torch torchvision torchaudio
+pip install ninja
+pip install -e ./esim_torch --no-build-isolation
+```
+
 Build/install the GPU bindings:
 
 ```bash
@@ -123,4 +147,3 @@ python3 esim_torch/scripts/generate_events.py --input_dir=example/upsampled \
                                              --refractory_period_ns=0 \
                                              --device=cuda
 ```
-
