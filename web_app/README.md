@@ -126,11 +126,13 @@ _This code base assumes you have access to an NVIDIA GPU with recent drivers and
 
 ### Prerequisites & Installation
 
-Use a Python virtual environment (`venv`) in the repository root:
+For the full project setup (split envs: TensorFlow + PyTorch), see [`../SETUP.md`](../SETUP.md).
+
+Use the PyTorch-side virtual environment in the repository root:
 ```sh
 cd rpg_vid2e
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv_vid2e_torch
+source venv_vid2e_torch/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt
 pip install -r requirements-webapp.txt
@@ -146,7 +148,8 @@ python3 -c "import torch, esim_torch; print('torch:', torch.__version__, 'cuda:'
 If you want to run this app locally on your system then follow these steps.
 1. Run the App
 ```sh
-source .venv/bin/activate
+source venv_vid2e_torch/bin/activate
+export UPSAMPLING_PYTHON="$(pwd)/venv_vid2e_tf/bin/python"
 cd web_app
 streamlit run web_app.py
 ```

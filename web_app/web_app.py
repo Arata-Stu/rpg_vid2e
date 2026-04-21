@@ -21,6 +21,7 @@ import skvideo.io
 #import esim_torch
 #from esim-cuda
 import os
+import subprocess
 import numba
 import cv2
 import tqdm
@@ -274,6 +275,24 @@ if add_selectbox == "Offline Video Generator":
       "format": format
   }
 
+  def run_upsampling():
+      upsampling_python = os.environ.get("UPSAMPLING_PYTHON", sys.executable)
+      cmd = [
+          upsampling_python,
+          "../upsampling/upsample.py",
+          "--input_dir=data/original/",
+          "--output_dir=data/upsampled",
+          "--device=0",
+          "--tf_log_level=2",
+          "--quiet",
+      ]
+      result = subprocess.run(cmd, check=False)
+      if result.returncode != 0:
+          raise RuntimeError(
+              f"Upsampling command failed (code={result.returncode}). "
+              "Set UPSAMPLING_PYTHON to your TensorFlow environment python if needed."
+          )
+
 
   generate_button = st.button("Generate Events")
   if generate_button:
@@ -292,7 +311,11 @@ if add_selectbox == "Offline Video Generator":
       #Step 2:
       if upsampling:
         print("inside upsampling")
-        os.system("python ../upsampling/upsample.py --input_dir=data/original/ --output_dir=data/upsampled --device=cuda:0")
+        try:
+          run_upsampling()
+        except RuntimeError as e:
+          st.error(str(e))
+          st.stop()
 
       #Step 3: Event Generation
       file_path = process_dir(args["output_dir"], args["input_dir"], args)
