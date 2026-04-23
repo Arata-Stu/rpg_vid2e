@@ -3,8 +3,8 @@
 This project is most stable when TensorFlow and PyTorch are installed in **separate virtual environments**.
 
 Use these explicit names (no leading dot):
-- `venv_vid2e_torch`: PyTorch, `esim_torch`, event generation, web app runtime
-- `venv_vid2e_tf`: TensorFlow/FILM upsampling
+- `vid2e_env`: PyTorch, `esim_torch`, event generation, web app runtime
+- `film_env`: TensorFlow/FILM upsampling
 
 ## 0. Host prerequisites
 
@@ -22,14 +22,14 @@ cd rpg_vid2e
 ## 2. Create both environments
 
 ```bash
-python3 -m venv venv_vid2e_torch
-python3 -m venv venv_vid2e_tf
+python3 -m venv vid2e_env
+python3 -m venv film_env
 ```
 
-## 3. Setup `venv_vid2e_torch` (PyTorch / esim)
+## 3. Setup `vid2e_env` (PyTorch / esim)
 
 ```bash
-source venv_vid2e_torch/bin/activate
+source vid2e_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt
 pip install -r requirements-webapp.txt
@@ -76,10 +76,10 @@ Deactivate when done:
 deactivate
 ```
 
-## 4. Setup `venv_vid2e_tf` (TensorFlow / upsampling)
+## 4. Setup `film_env` (TensorFlow / upsampling)
 
 ```bash
-source venv_vid2e_tf/bin/activate
+source film_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements-upsampling.txt
 pip uninstall -y tensorflow tensorflow-cpu tensorflow-intel
@@ -107,7 +107,7 @@ deactivate
 ### 5.1 Upsampling (TensorFlow env)
 
 ```bash
-source venv_vid2e_tf/bin/activate
+source film_env/bin/activate
 python3 upsampling/upsample.py \
   --input_dir ./example/original \
   --output_dir ./example/upsampled \
@@ -120,7 +120,7 @@ deactivate
 ### 5.2 Event generation (PyTorch env)
 
 ```bash
-source venv_vid2e_torch/bin/activate
+source vid2e_env/bin/activate
 python3 esim_torch/scripts/generate_events.py \
   --input_dir=example/upsampled \
   --output_dir=example/events \
@@ -136,8 +136,8 @@ deactivate
 Run Streamlit in PyTorch env, and tell it to invoke upsampling with TensorFlow env python:
 
 ```bash
-source venv_vid2e_torch/bin/activate
-export UPSAMPLING_PYTHON="$(pwd)/venv_vid2e_tf/bin/python"
+source vid2e_env/bin/activate
+export UPSAMPLING_PYTHON="$(pwd)/film_env/bin/python"
 cd web_app
 streamlit run web_app.py
 ```
@@ -158,14 +158,14 @@ Fix:
 Cause: TensorFlow GPU runtime not resolved.
 
 Fix:
-1. Reinstall `tensorflow[and-cuda]==2.17.1` in `venv_vid2e_tf`
+1. Reinstall `tensorflow[and-cuda]==2.17.1` in `film_env`
 2. Verify driver with `nvidia-smi`
 3. Re-run TensorFlow GPU check
 
 CPU fallback remains available:
 
 ```bash
-source venv_vid2e_tf/bin/activate
+source film_env/bin/activate
 python3 upsampling/upsample.py \
   --input_dir ./example/original \
   --output_dir ./example/upsampled_cpu \

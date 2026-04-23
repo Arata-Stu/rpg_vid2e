@@ -131,8 +131,8 @@ For the full project setup (split envs: TensorFlow + PyTorch), see [`../SETUP.md
 Use the PyTorch-side virtual environment in the repository root:
 ```sh
 cd rpg_vid2e
-python3 -m venv venv_vid2e_torch
-source venv_vid2e_torch/bin/activate
+python3 -m venv vid2e_env
+source vid2e_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt
 pip install -r requirements-webapp.txt
@@ -148,8 +148,8 @@ python3 -c "import torch, esim_torch; print('torch:', torch.__version__, 'cuda:'
 If you want to run this app locally on your system then follow these steps.
 1. Run the App
 ```sh
-source venv_vid2e_torch/bin/activate
-export UPSAMPLING_PYTHON="$(pwd)/venv_vid2e_tf/bin/python"
+source vid2e_env/bin/activate
+export UPSAMPLING_PYTHON="$(pwd)/film_env/bin/python"
 cd web_app
 streamlit run web_app.py
 ```

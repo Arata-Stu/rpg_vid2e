@@ -42,15 +42,15 @@ git clone git@github.com:uzh-rpg/rpg_vid2e.git --recursive
 cd rpg_vid2e
 ```
 
-For the recommended split-environment setup (`venv_vid2e_torch` + `venv_vid2e_tf`), see [SETUP.md](SETUP.md).
+For the recommended split-environment setup (`vid2e_env` + `film_env`), see [SETUP.md](SETUP.md).
 
 ### Torch Environment (modern GPU)
 
 Create an environment with Python 3.10+ and install the base dependencies:
 
 ```bash
-python3 -m venv venv_vid2e_torch
-source venv_vid2e_torch/bin/activate
+python3 -m venv vid2e_env
+source vid2e_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt
 ```
@@ -113,6 +113,8 @@ Install optional upsampling dependencies:
 python3 -m venv film_env
 source film_env/bin/activate
 pip install -r requirements-upsampling.txt
+pip uninstall -y tensorflow tensorflow-cpu tensorflow-intel
+pip install "tensorflow[and-cuda]==2.17.1"
 ```
 
 For historical reproducibility with the original pinned dependency set, use `requirements-legacy.txt`.
@@ -136,18 +138,21 @@ For detailed instructions and example consult the [README](esim_torch/README.md)
 To run an example, first upsample the example videos 
 
 ```bash
+source film_env/bin/activate
 device=auto
 # device=cpu
 # device=0
 python3 upsampling/upsample.py --input_dir=example/original --output_dir=example/upsampled --device=$device --tf_log_level=2
-
+deactivate
 ```
 This will generate upsampled frames in the `example/upsampled` folder. To generate events, use
 ```bash
+source vid2e_env/bin/activate
 python3 esim_torch/scripts/generate_events.py --input_dir=example/upsampled \
                                              --output_dir=example/events \
                                              --contrast_threshold_neg=0.2 \
                                              --contrast_threshold_pos=0.2 \
                                              --refractory_period_ns=0 \
                                              --device=cuda
+deactivate
 ```
