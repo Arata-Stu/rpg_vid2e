@@ -76,6 +76,8 @@ PY
 nvcc -V
 ```
 
+If your shell does not pick the intended CUDA toolkit, add persistent CUDA path exports in `~/.bashrc` as described in [SETUP.md](SETUP.md) (`0.1 Persist CUDA path in ~/.bashrc`).
+
 If you hit `RuntimeError: The detected CUDA version mismatches the version that was used to compile PyTorch`, reinstall a matching PyTorch wheel and retry. Example for CUDA 12.6:
 
 ```bash

@@ -12,6 +12,31 @@ Use these explicit names (no leading dot):
 - CUDA Toolkit installed on host (`nvcc` available) for building `esim_torch`
 - Python 3.10 or 3.11
 
+### 0.1 Persist CUDA path in `~/.bashrc`
+
+If `nvcc` is not found, or the wrong CUDA version is picked, set CUDA paths in `~/.bashrc`.
+
+Example (for CUDA 12.6):
+
+```bash
+echo '' >> ~/.bashrc
+echo '# CUDA 12.6' >> ~/.bashrc
+echo 'export CUDA_HOME=/usr/local/cuda-12.6' >> ~/.bashrc
+echo 'export PATH=$CUDA_HOME/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Verify:
+
+```bash
+echo "$CUDA_HOME"
+which nvcc
+nvcc -V
+```
+
+If you use `zsh`, apply the same lines to `~/.zshrc` instead.
+
 ## 1. Clone repository
 
 ```bash
