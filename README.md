@@ -110,6 +110,8 @@ rm -rf /tmp/temp.zip
 Install optional upsampling dependencies:
 
 ```bash
+python3 -m venv firm_env
+source firm_env/bin/activate
 pip install -r requirements-upsampling.txt
 ```
 
