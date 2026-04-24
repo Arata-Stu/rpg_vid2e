@@ -44,6 +44,14 @@ cd rpg_vid2e
 
 For the recommended split-environment setup (`vid2e_env` + `film_env`), see [SETUP.md](SETUP.md).
 
+If you want one-command setup, use:
+
+```bash
+bash scripts/setup_split_envs.sh
+```
+
+This script creates `vid2e_env` and `film_env` with Python 3.11 defaults.
+
 ### Torch Environment (modern GPU)
 
 Create an environment with Python 3.11 and install the base dependencies:
@@ -120,6 +128,51 @@ pip install "tensorflow[and-cuda]==2.17.1"
 ```
 
 For historical reproducibility with the original pinned dependency set, use `requirements-legacy.txt`.
+
+### CUDA 12.8 host setup (Python 3.11, split env)
+
+If your system CUDA toolkit is 12.8, the following setup is recommended.
+
+```bash
+# 1) PyTorch / ESIM environment
+python3.11 -m venv vid2e_env
+source vid2e_env/bin/activate
+pip install -U pip setuptools wheel
+pip install -r requirements.txt
+pip install -r requirements-webapp.txt
+pip uninstall -y torch torchvision torchaudio
+pip install --index-url https://download.pytorch.org/whl/cu126 torch torchvision torchaudio
+pip install ninja
+
+# Use host CUDA 12.8 toolkit for extension build
+export CUDA_HOME=/usr/local/cuda-12.8
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}
+hash -r
+
+pip install -e ./esim_torch --no-build-isolation
+pip install -e ./esim_py --no-build-isolation
+deactivate
+
+# 2) TensorFlow / FILM environment
+python3.11 -m venv film_env
+source film_env/bin/activate
+pip install -U pip setuptools wheel
+pip install -r requirements-upsampling.txt
+pip uninstall -y tensorflow tensorflow-cpu tensorflow-intel
+pip install "tensorflow[and-cuda]==2.17.1"
+
+python3 - <<'PY'
+import tensorflow as tf
+print("tf:", tf.__version__)
+print("gpus:", tf.config.list_physical_devices("GPU"))
+PY
+deactivate
+```
+
+Notes:
+- `tensorflow[and-cuda]==2.17.1` installs CUDA runtime libraries inside `film_env`.
+- On a CUDA 12.8 host, this is expected to work as long as the NVIDIA driver is sufficiently recent.
 
 ## Adaptive Upsampling
 *This package provides code for adaptive upsampling with frame interpolation based on [Super-SloMo](https://people.cs.umass.edu/~hzjiang/projects/superslomo/)*
