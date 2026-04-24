@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from typing import Union
 
-from .const import fps_filename, imgs_dirname, video_formats
-from .dataset import Sequence, ImageSequence, VideoSequence
+from .const import fps_filename, imgs_dirname, manifest_filename, video_formats
+from .dataset import Sequence, ImageSequence, ManifestSequence, VideoSequence
 
 def is_video_file(filepath: str) -> bool:
     return Path(filepath).suffix.lower() in video_formats
@@ -12,6 +12,12 @@ def get_fps_file(dirpath: str) -> Union[None, str]:
     fps_file = os.path.join(dirpath, fps_filename)
     if os.path.isfile(fps_file):
         return fps_file
+    return None
+
+def get_manifest_file(dirpath: str) -> Union[None, str]:
+    manifest_file = os.path.join(dirpath, manifest_filename)
+    if os.path.isfile(manifest_file):
+        return manifest_file
     return None
 
 def get_imgs_directory(dirpath: str) -> Union[None, str]:
@@ -36,6 +42,10 @@ def fps_from_file(fps_file) -> float:
     return fps
 
 def get_sequence_or_none(dirpath: str) -> Union[None, Sequence]:
+    manifest_file = get_manifest_file(dirpath)
+    if manifest_file:
+        return ManifestSequence(manifest_file)
+
     fps_file = get_fps_file(dirpath)
     if fps_file:
         # Must be a sequence (either ImageSequence or VideoSequence)
@@ -51,5 +61,4 @@ def get_sequence_or_none(dirpath: str) -> Union[None, Sequence]:
     if video_file is not None:
         return VideoSequence(video_file)
     return None
-
 

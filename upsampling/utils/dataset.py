@@ -39,6 +39,22 @@ class Sequence:
         raise NotImplementedError
 
 
+def _pil_loader(path: str):
+    with open(path, 'rb') as f:
+        img = Image.open(f)
+        img = img.convert('RGB')
+
+        w_orig, h_orig = img.size
+        w, h = w_orig//32*32, h_orig//32*32
+
+        left = (w_orig - w)//2
+        upper = (h_orig - h)//2
+        right = left + w
+        lower = upper + h
+        img = img.crop((left, upper, right, lower))
+        return np.array(img).astype("float32") / 255
+
+
 class ImageSequence(Sequence):
     def __init__(self, imgs_dirpath: str, fps: float):
         super().__init__()
@@ -58,33 +74,72 @@ class ImageSequence(Sequence):
     def __next__(self):
         for idx in range(0, len(self.file_names) - 1):
             file_paths = self._get_path_from_name([self.file_names[idx], self.file_names[idx + 1]])
-            imgs = [self._pil_loader(f) for f in file_paths]
+            imgs = [_pil_loader(f) for f in file_paths]
             times_sec = [idx/self.fps, (idx + 1)/self.fps]
             yield imgs, times_sec
 
     def __len__(self):
         return len(self.file_names) - 1
 
-    @staticmethod
-    def _pil_loader(path):
-        with open(path, 'rb') as f:
-            img = Image.open(f)
-            img = img.convert('RGB')
-
-            w_orig, h_orig = img.size
-            w, h = w_orig//32*32, h_orig//32*32
-
-            left = (w_orig - w)//2
-            upper = (h_orig - h)//2
-            right = left + w
-            lower = upper + h
-            img = img.crop((left, upper, right, lower))
-            return np.array(img).astype("float32") / 255
-
     def _get_path_from_name(self, file_names: Union[list, str]) -> Union[list, str]:
         if isinstance(file_names, list):
             return [os.path.join(self.imgs_dirpath, f) for f in file_names]
         return os.path.join(self.imgs_dirpath, file_names)
+
+
+class ManifestSequence(Sequence):
+    """
+    Sequence backed by a manifest text file.
+
+    Format per non-empty line:
+      <timestamp_seconds> <absolute_or_relative_image_path>
+    """
+
+    def __init__(self, manifest_filepath: str):
+        super().__init__()
+        assert os.path.isfile(manifest_filepath), manifest_filepath
+        self.manifest_filepath = os.path.abspath(manifest_filepath)
+
+        rows = []
+        with open(self.manifest_filepath, "r") as f:
+            for line_num, raw_line in enumerate(f, 1):
+                line = raw_line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split(maxsplit=1)
+                if len(parts) != 2:
+                    raise ValueError(
+                        f"Invalid manifest line {line_num} in {self.manifest_filepath}: "
+                        f"expected '<timestamp> <path>'"
+                    )
+                t_str, img_path = parts
+                timestamp = float(t_str)
+                if not os.path.isabs(img_path):
+                    img_path = os.path.join(os.path.dirname(self.manifest_filepath), img_path)
+                rows.append((timestamp, os.path.abspath(img_path)))
+
+        if len(rows) < 2:
+            raise ValueError(
+                f"Expected at least 2 frames in manifest {self.manifest_filepath}, got {len(rows)}"
+            )
+
+        rows.sort(key=lambda x: x[0])
+        t0 = rows[0][0]
+        self.timestamps_sec = [t - t0 for t, _ in rows]
+        self.image_paths = [p for _, p in rows]
+
+        for image_path in self.image_paths:
+            if not os.path.isfile(image_path):
+                raise FileNotFoundError(f"Image referenced in manifest does not exist: {image_path}")
+
+    def __next__(self):
+        for idx in range(0, len(self.image_paths) - 1):
+            imgs = [_pil_loader(self.image_paths[idx]), _pil_loader(self.image_paths[idx + 1])]
+            times_sec = [self.timestamps_sec[idx], self.timestamps_sec[idx + 1]]
+            yield imgs, times_sec
+
+    def __len__(self):
+        return len(self.image_paths) - 1
 
 
 class VideoSequence(Sequence):

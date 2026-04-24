@@ -33,6 +33,19 @@ input_dir
     - must specify the frames per second in the first line. The rest of the file should be empty (see example directory).
     - is required for sequences (such as seq0) with image files.
     - is **optional** for sequences with a video file. In case of a missing `fps.txt` file, the frames per second will be inferred from the metadata of the video file.
+- If no folder matches this structure, `upsample.py` will exit with:
+  `RuntimeError: No valid sequence found under input_dir`.
+
+Alternatively, each sequence folder can contain a `frames.txt` manifest:
+```
+sequence_dir
+└── frames.txt
+```
+`frames.txt` format (one frame per line):
+```
+<timestamp_seconds> <absolute_or_relative_image_path>
+```
+This is useful for large datasets where you do not want to move/copy images.
 
 The **resulting output structure** is as follows:
 ```
@@ -72,6 +85,27 @@ The resulting image directories can later be used to generate events. The `times
     - Well established C++ interface to load images. This is useful to generate events on the fly (needed for contrast threshold randomization) in C++ code without loading data in Python first.
   If there is a need to store the resulting sequences in a different format, raise an issue (feature request) on this GitHub repository.
 - Be aware that upsampling videos might fail due to a [bug in scikit-video](https://github.com/scikit-video/scikit-video/issues/60)
+
+### nuScenes CAM_FRONT (no data copy)
+
+For nuScenes `sweeps/CAM_FRONT`, generate manifest text files first:
+```bash
+python scripts/build_nuscenes_manifests.py \
+  --cam_dir /path/to/v1.0-mini/sweeps/CAM_FRONT \
+  --output_dir /path/to/nuscenes_cam_front_manifests \
+  --camera CAM_FRONT
+```
+
+Then run upsampling on the generated manifest directory:
+```bash
+device=auto
+python upsample.py \
+  --input_dir /path/to/nuscenes_cam_front_manifests \
+  --output_dir /path/to/nuscenes_cam_front_upsampled \
+  --device=$device \
+  --tf_log_level=3 \
+  --quiet
+```
 
 ### Generating Video Files from Images
 If you want to convert an ordered sequence of images (here png files) into video format you can use the following command (you may have to deactivate the current virtual environment):

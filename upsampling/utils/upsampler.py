@@ -38,6 +38,14 @@ class Upsampler:
             dest_timestamps_filepath = os.path.join(self.dest_dir, reldirpath, self._timestamps_filename)
             self.upsample_sequence(sequence, dest_imgs_dir, dest_timestamps_filepath)
 
+        if sequence_counter == 0:
+            raise RuntimeError(
+                "No valid sequence found under input_dir. "
+                "Expected each sequence directory to contain either "
+                "(a) one video file (e.g. .mp4/.mov), or "
+                "(b) fps.txt + imgs/*.png (or jpg)."
+            )
+
     def upsample_sequence(self, sequence: Sequence, dest_imgs_dir: str, dest_timestamps_filepath: str):
         os.makedirs(dest_imgs_dir, exist_ok=True)
         timestamps_list = list()
