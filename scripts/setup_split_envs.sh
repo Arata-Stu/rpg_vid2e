@@ -144,8 +144,8 @@ setup_vid2e_env() {
     "${py}" -m pip install -e ./esim_torch --no-build-isolation
   fi
 
-  log "Installing esim_py editable package"
-  "${py}" -m pip install -e ./esim_py --no-build-isolation
+  # log "Installing esim_py editable package"
+  # "${py}" -m pip install -e ./esim_py --no-build-isolation
 
   log "Quick check: PyTorch in ${VID2E_ENV}"
   "${py}" - <<'PY'
