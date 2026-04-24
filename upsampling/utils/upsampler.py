@@ -43,7 +43,8 @@ class Upsampler:
                 "No valid sequence found under input_dir. "
                 "Expected each sequence directory to contain either "
                 "(a) one video file (e.g. .mp4/.mov), or "
-                "(b) fps.txt + imgs/*.png (or jpg)."
+                "(b) fps.txt + imgs/*.png (or jpg), or "
+                "(c) frames.txt with '<timestamp_seconds> <image_path>' lines."
             )
 
     def upsample_sequence(self, sequence: Sequence, dest_imgs_dir: str, dest_timestamps_filepath: str):
