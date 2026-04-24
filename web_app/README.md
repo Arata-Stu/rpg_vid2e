@@ -131,7 +131,7 @@ For the full project setup (split envs: TensorFlow + PyTorch), see [`../SETUP.md
 Use the PyTorch-side virtual environment in the repository root:
 ```sh
 cd rpg_vid2e
-python3 -m venv vid2e_env
+python3.11 -m venv vid2e_env
 source vid2e_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt

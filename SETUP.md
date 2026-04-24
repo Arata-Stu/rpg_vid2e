@@ -10,7 +10,7 @@ Use these explicit names (no leading dot):
 
 - Linux + NVIDIA driver (`nvidia-smi` works)
 - CUDA Toolkit installed on host (`nvcc` available) for building `esim_torch`
-- Python 3.10 or 3.11
+- Python 3.11
 
 ### 0.1 Persist CUDA path in `~/.bashrc`
 
@@ -47,8 +47,8 @@ cd rpg_vid2e
 ## 2. Create both environments
 
 ```bash
-python3 -m venv vid2e_env
-python3 -m venv film_env
+python3.11 -m venv vid2e_env
+python3.11 -m venv film_env
 ```
 
 ## 3. Setup `vid2e_env` (PyTorch / esim)

@@ -46,10 +46,10 @@ For the recommended split-environment setup (`vid2e_env` + `film_env`), see [SET
 
 ### Torch Environment (modern GPU)
 
-Create an environment with Python 3.10+ and install the base dependencies:
+Create an environment with Python 3.11 and install the base dependencies:
 
 ```bash
-python3 -m venv vid2e_env
+python3.11 -m venv vid2e_env
 source vid2e_env/bin/activate
 pip install -U pip setuptools wheel
 pip install -r requirements.txt
@@ -112,7 +112,7 @@ rm -rf /tmp/temp.zip
 Install optional upsampling dependencies:
 
 ```bash
-python3 -m venv film_env
+python3.11 -m venv film_env
 source film_env/bin/activate
 pip install -r requirements-upsampling.txt
 pip uninstall -y tensorflow tensorflow-cpu tensorflow-intel
